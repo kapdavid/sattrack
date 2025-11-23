@@ -164,35 +164,37 @@
 
           <!-- Passes Table -->
           <div v-if="passes && passes.length > 0" class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-slate-100">
-                <tr>
-                  <th class="px-4 py-2 text-left">AOS Time</th>
-                  <th class="px-4 py-2 text-left">Max Elevation</th>
-                  <th class="px-4 py-2 text-left">Duration</th>
-                  <th class="px-4 py-2 text-left">Quality</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(pass, index) in filteredPasses"
-                  :key="index"
-                  class="border-b hover:bg-slate-50"
-                >
-                  <td class="px-4 py-3">{{ formatDateTime(pass.aos_time) }}</td>
-                  <td class="px-4 py-3">{{ pass.max_elevation.toFixed(1) }}°</td>
-                  <td class="px-4 py-3">{{ formatDuration(pass.duration) }}</td>
-                  <td class="px-4 py-3">
-                    <span
-                      class="px-2 py-1 rounded-full text-xs font-semibold"
-                      :class="qualityClass(pass.quality_score)"
-                    >
-                      {{ pass.quality_score.toFixed(0) }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+<table class="w-full text-sm border-collapse">
+  <thead>
+    <tr class="border-b border-white/10 text-slate-400 uppercase text-xs tracking-wider">
+      <th class="px-4 py-4 text-left font-medium">AOS Time</th>
+      <th class="px-4 py-4 text-left font-medium">Max El</th>
+      <th class="px-4 py-4 text-left font-medium">Duration</th>
+      <th class="px-4 py-4 text-left font-medium">Quality</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-white/5">
+    <tr v-for="(pass, index) in filteredPasses" :key="index" class="hover:bg-white/5 transition-colors">
+      <td class="px-4 py-4 font-mono text-slate-300">
+        {{ formatDateTime(pass.aos_time) }}
+      </td>
+      <td class="px-4 py-4 text-slate-300">
+        <div class="flex items-center gap-2">
+           <div class="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+             <div class="h-full bg-blue-500" :style="`width: ${(pass.max_elevation / 90) * 100}%`"></div>
+           </div>
+           {{ pass.max_elevation.toFixed(0) }}°
+        </div>
+      </td>
+      <td class="px-4 py-4 text-slate-300">{{ formatDuration(pass.duration) }}</td>
+      <td class="px-4 py-4">
+        <span class="px-2.5 py-1 rounded-md text-xs font-bold border" :class="qualityBadgeClass(pass.quality_score)">
+          {{ pass.quality_score.toFixed(0) }}
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
           </div>
 
           <div v-else-if="passes && filteredPasses.length === 0 && passes.length > 0" class="text-slate-600 text-center py-4">
@@ -330,6 +332,11 @@ const qualityClass = (score) => {
   if (score >= 70) return 'bg-green-100 text-green-800'
   if (score >= 40) return 'bg-yellow-100 text-yellow-800'
   return 'bg-orange-100 text-orange-800'
+}
+const qualityBadgeClass = (score) => {
+  if (score >= 70) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+  if (score >= 40) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+  return 'bg-red-500/10 text-red-400 border-red-500/20'
 }
 
 onMounted(async () => {

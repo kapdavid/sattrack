@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui;
+  
+  /* Custom Space Colors */
+  --color-space-900: #0B0C15;
+  --color-space-800: #151725;
+  --color-space-700: #1F2235;
+  --color-accent-blue: #3B82F6;
+  --color-accent-glow: #60A5FA;
+}
+
+body {
+  background-color: var(--color-space-900);
+  background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0B0C15 75%);
+  color: #e2e8f0;
+  min-height: 100vh;
+}
