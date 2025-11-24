@@ -1,19 +1,17 @@
 <template>
-  <div>
-    <!-- Loading State -->
+  <div class="max-w-4xl mx-auto">
     <div v-if="satellitesStore.loading && !satellite" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      <p class="mt-4 text-slate-600">Loading satellite...</p>
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <p class="mt-4 text-slate-400">Acquiring signal...</p>
     </div>
 
-    <!-- Satellite Details -->
     <div v-else-if="satellite">
-      <div class="flex justify-between items-start mb-6">
+      <div class="flex justify-between items-start mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-slate-900">{{ satellite.name }}</h1>
+          <h1 class="text-4xl font-display font-bold text-white tracking-tight">{{ satellite.name }}</h1>
           <span
-            class="inline-block mt-2 px-3 py-1 text-sm font-semibold rounded-full"
-            :class="categoryClass"
+            class="inline-block mt-3 px-3 py-1 text-xs font-bold tracking-wider uppercase rounded-full border"
+            :class="categoryBadgeClass"
           >
             {{ categoryLabel }}
           </span>
@@ -22,188 +20,202 @@
         <button
           v-if="authStore.isAuthenticated"
           @click="toggleFavorite"
-          class="text-4xl hover:scale-110 transition"
-          :disabled="userStore.loading"
+          class="text-3xl hover:scale-110 transition-transform active:scale-95"
+          :class="isFavorited ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-slate-600 hover:text-yellow-400'"
         >
-          {{ isFavorited ? '⭐' : '☆' }}
+          ★
         </button>
       </div>
 
-      <!-- Satellite Info -->
-      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-xl font-bold text-slate-900 mb-4">Information</h2>
-        <div class="grid md:grid-cols-2 gap-4 text-slate-700">
-          <div>
-            <p class="text-sm text-slate-500">NORAD ID</p>
-            <p class="font-semibold">{{ satellite.norad_id }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-slate-500">Last TLE Update</p>
-            <p class="font-semibold">{{ formattedDate }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Current Position -->
-      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-xl font-bold text-slate-900 mb-4">Current Position</h2>
-
-        <button
-          @click="fetchPosition"
-          :disabled="loadingPosition"
-          class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
-        >
-          {{ loadingPosition ? 'Loading...' : 'Get Current Position' }}
-        </button>
-
-        <div v-if="position" class="grid md:grid-cols-3 gap-4 text-slate-700">
-          <div>
-            <p class="text-sm text-slate-500">Latitude</p>
-            <p class="font-semibold">{{ position.latitude.toFixed(4) }}°</p>
-          </div>
-          <div>
-            <p class="text-sm text-slate-500">Longitude</p>
-            <p class="font-semibold">{{ position.longitude.toFixed(4) }}°</p>
-          </div>
-          <div>
-            <p class="text-sm text-slate-500">Altitude</p>
-            <p class="font-semibold">{{ position.altitude_km.toFixed(2) }} km</p>
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-space-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl">
+          <h2 class="text-lg font-display font-bold text-white mb-4 border-b border-white/10 pb-2">Mission Data</h2>
+          <div class="space-y-4">
+            <div>
+              <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">NORAD ID</p>
+              <p class="font-mono text-xl text-blue-400">{{ satellite.norad_id }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Last TLE Update</p>
+              <p class="font-mono text-slate-300">{{ formattedDate }}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Pass Predictions -->
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex justify-between items-start mb-4">
-          <h2 class="text-xl font-bold text-slate-900">Pass Predictions</h2>
+        <div class="bg-space-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl">
+          <h2 class="text-lg font-display font-bold text-white mb-4 border-b border-white/10 pb-2">Live Telemetry</h2>
+
           <button
-            @click="showQualityInfo = !showQualityInfo"
-            class="text-sm text-blue-600 hover:text-blue-800 underline"
+            @click="fetchPosition"
+            :disabled="loadingPosition"
+            class="mb-6 w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all text-sm font-medium disabled:opacity-50"
           >
-            {{ showQualityInfo ? 'Hide' : 'What is quality?' }}
+            {{ loadingPosition ? 'Triangulating...' : 'Refresh Coordinates' }}
           </button>
+
+          <div v-if="position" class="grid grid-cols-3 gap-2">
+            <div class="text-center p-2 bg-space-900/50 rounded-lg border border-white/5">
+              <p class="text-[10px] text-slate-500 uppercase">Lat</p>
+              <p class="font-mono text-sm text-white">{{ position.latitude.toFixed(2) }}°</p>
+            </div>
+            <div class="text-center p-2 bg-space-900/50 rounded-lg border border-white/5">
+              <p class="text-[10px] text-slate-500 uppercase">Lon</p>
+              <p class="font-mono text-sm text-white">{{ position.longitude.toFixed(2) }}°</p>
+            </div>
+            <div class="text-center p-2 bg-space-900/50 rounded-lg border border-white/5">
+              <p class="text-[10px] text-slate-500 uppercase">Alt</p>
+              <p class="font-mono text-sm text-emerald-400">{{ position.altitude_km.toFixed(0) }} km</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-space-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-display font-bold text-white">Pass Predictions</h2>
+          
+          <div v-if="userStore.hasLocation">
+             <button
+              @click="calculatePasses"
+              :disabled="loadingPasses"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all text-sm font-medium disabled:opacity-50"
+            >
+              {{ loadingPasses ? 'Calculating...' : 'Calculate (7 Days)' }}
+            </button>
+          </div>
         </div>
 
-        <!-- Quality Score Explanation -->
-        <div v-if="showQualityInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm">
-          <p class="font-semibold text-blue-900 mb-2">How Pass Quality is Calculated (0-100)</p>
-          <ul class="space-y-1 text-blue-800">
-            <li><strong>Elevation (70 points max):</strong> Higher passes are better. Passes above 45° get near-perfect elevation scores.</li>
-            <li><strong>Duration (30 points max):</strong> Longer passes are better. Passes of 10+ minutes get full duration scores.</li>
-            <li><strong>Score ranges:</strong> 70+ = Excellent (green), 40-69 = Good (yellow), &lt;40 = Fair (orange)</li>
-          </ul>
+        <!-- Not authenticated -->
+        <div v-if="!authStore.isAuthenticated" class="bg-blue-500/10 border border-blue-500/20 text-blue-200 p-4 rounded-lg text-center">
+          <p class="font-medium">Login Required</p>
+          <p class="text-sm mt-1 text-blue-300">Sign in to calculate pass predictions</p>
+          <router-link to="/login" class="inline-block mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition text-sm font-medium">
+            Login
+          </router-link>
         </div>
 
-        <div v-if="!userStore.hasLocation" class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg mb-4">
-          <p class="font-semibold">Location Required</p>
-          <p class="text-sm mt-1">Please set your observer location in settings to calculate pass predictions.</p>
-          <router-link
-            to="/settings"
-            class="inline-block mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
-          >
-            Go to Settings
+        <!-- Authenticated but no location -->
+        <div v-else-if="!userStore.hasLocation" class="bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 p-4 rounded-lg text-center">
+          <p class="font-medium">Location Required</p>
+          <p class="text-sm mt-1 text-yellow-300">Configure your observer location to calculate passes</p>
+          <router-link to="/settings" class="inline-block mt-3 px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition text-sm font-medium">
+            Configure Location
           </router-link>
         </div>
 
         <div v-else>
-          <button
-            @click="calculatePasses"
-            :disabled="loadingPasses"
-            class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
-          >
-            {{ loadingPasses ? 'Calculating...' : 'Calculate Passes (7 days)' }}
-          </button>
+           <div v-if="passes && passes.length > 0" class="mb-6 p-4 bg-space-900/50 rounded-lg border border-white/5">
+             <div class="flex items-center justify-between mb-4">
+               <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Filter Passes</p>
+               <button @click="resetFilters" class="text-xs text-blue-400 hover:text-blue-300 underline">
+                 Reset
+               </button>
+             </div>
 
-          <!-- Filter Controls -->
-          <div v-if="passes && passes.length > 0" class="mb-4 p-4 bg-slate-50 rounded-lg">
-            <p class="text-sm font-semibold text-slate-700 mb-3">Filter Passes:</p>
-            <div class="grid md:grid-cols-2 gap-4">
-              <div>
-                <label for="minQuality" class="block text-sm text-slate-600 mb-1">
-                  Min. Quality: {{ minQuality }}
-                </label>
-                <input
-                  id="minQuality"
-                  v-model.number="minQuality"
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  class="w-full"
-                />
-                <div class="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>0</span>
-                  <span>50</span>
-                  <span>100</span>
-                </div>
-              </div>
-              <div>
-                <label for="minDuration" class="block text-sm text-slate-600 mb-1">
-                  Min. Duration: {{ Math.floor(minDuration / 60) }}m {{ minDuration % 60 }}s
-                </label>
-                <input
-                  id="minDuration"
-                  v-model.number="minDuration"
-                  type="range"
-                  min="0"
-                  max="600"
-                  step="30"
-                  class="w-full"
-                />
-                <div class="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>0m</span>
-                  <span>5m</span>
-                  <span>10m</span>
-                </div>
-              </div>
-            </div>
-            <p class="text-xs text-slate-500 mt-2">
-              Showing {{ filteredPasses.length }} of {{ passes.length }} passes
-            </p>
-          </div>
+             <div class="grid md:grid-cols-3 gap-4 mb-4">
+               <!-- Quality Filter -->
+               <div>
+                 <label for="qualityFilter" class="block text-xs text-slate-400 mb-2 uppercase tracking-wide">
+                   Quality
+                 </label>
+                 <select
+                   id="qualityFilter"
+                   v-model="qualityFilter"
+                   class="w-full px-3 py-2 bg-space-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 >
+                   <option value="all">All Quality</option>
+                   <option value="excellent">Excellent (70+)</option>
+                   <option value="good">Good (40+)</option>
+                   <option value="fair">Fair (0+)</option>
+                 </select>
+               </div>
 
-          <!-- Passes Table -->
-          <div v-if="passes && passes.length > 0" class="overflow-x-auto">
-<table class="w-full text-sm border-collapse">
-  <thead>
-    <tr class="border-b border-white/10 text-slate-400 uppercase text-xs tracking-wider">
-      <th class="px-4 py-4 text-left font-medium">AOS Time</th>
-      <th class="px-4 py-4 text-left font-medium">Max El</th>
-      <th class="px-4 py-4 text-left font-medium">Duration</th>
-      <th class="px-4 py-4 text-left font-medium">Quality</th>
-    </tr>
-  </thead>
-  <tbody class="divide-y divide-white/5">
-    <tr v-for="(pass, index) in filteredPasses" :key="index" class="hover:bg-white/5 transition-colors">
-      <td class="px-4 py-4 font-mono text-slate-300">
-        {{ formatDateTime(pass.aos_time) }}
-      </td>
-      <td class="px-4 py-4 text-slate-300">
-        <div class="flex items-center gap-2">
-           <div class="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-             <div class="h-full bg-blue-500" :style="`width: ${(pass.max_elevation / 90) * 100}%`"></div>
+               <!-- Duration Filter -->
+               <div>
+                 <label for="durationFilter" class="block text-xs text-slate-400 mb-2 uppercase tracking-wide">
+                   Min Duration
+                 </label>
+                 <select
+                   id="durationFilter"
+                   v-model.number="durationFilter"
+                   class="w-full px-3 py-2 bg-space-800 border border-white/10 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 >
+                   <option :value="0">Any Duration</option>
+                   <option :value="60">1+ minutes</option>
+                   <option :value="180">3+ minutes</option>
+                   <option :value="300">5+ minutes</option>
+                   <option :value="600">10+ minutes</option>
+                 </select>
+               </div>
+
+               <!-- Time of Day Filter -->
+               <div>
+                 <label class="block text-xs text-slate-400 mb-2 uppercase tracking-wide">
+                   Time of Day
+                 </label>
+                 <div class="grid grid-cols-2 gap-2">
+                   <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                     <input type="checkbox" v-model="timeFilters.morning" class="rounded bg-space-800 border-white/10 text-blue-600 focus:ring-blue-500">
+                     <span>Morning</span>
+                   </label>
+                   <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                     <input type="checkbox" v-model="timeFilters.afternoon" class="rounded bg-space-800 border-white/10 text-blue-600 focus:ring-blue-500">
+                     <span>Afternoon</span>
+                   </label>
+                   <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                     <input type="checkbox" v-model="timeFilters.evening" class="rounded bg-space-800 border-white/10 text-blue-600 focus:ring-blue-500">
+                     <span>Evening</span>
+                   </label>
+                   <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                     <input type="checkbox" v-model="timeFilters.night" class="rounded bg-space-800 border-white/10 text-blue-600 focus:ring-blue-500">
+                     <span>Night</span>
+                   </label>
+                 </div>
+               </div>
+             </div>
+
+             <p class="text-xs text-slate-500">
+               Showing {{ filteredPasses.length }} of {{ passes.length }} passes
+             </p>
            </div>
-           {{ pass.max_elevation.toFixed(0) }}°
-        </div>
-      </td>
-      <td class="px-4 py-4 text-slate-300">{{ formatDuration(pass.duration) }}</td>
-      <td class="px-4 py-4">
-        <span class="px-2.5 py-1 rounded-md text-xs font-bold border" :class="qualityBadgeClass(pass.quality_score)">
-          {{ pass.quality_score.toFixed(0) }}
-        </span>
-      </td>
-    </tr>
-  </tbody>
-</table>
-          </div>
 
-          <div v-else-if="passes && filteredPasses.length === 0 && passes.length > 0" class="text-slate-600 text-center py-4">
-            No passes match your filters. Try adjusting the quality or duration filters.
-          </div>
-
-          <div v-else-if="passes && passes.length === 0" class="text-slate-600 text-center py-4">
-            No passes found in the next 7 days
-          </div>
+           <div v-if="passes && passes.length > 0" class="overflow-x-auto">
+             <table class="w-full text-sm border-collapse">
+               <thead>
+                 <tr class="border-b border-white/10 text-slate-400 uppercase text-xs tracking-wider">
+                   <th class="px-4 py-3 text-left font-medium">AOS Time</th>
+                   <th class="px-4 py-3 text-left font-medium">Max El</th>
+                   <th class="px-4 py-3 text-left font-medium">Duration</th>
+                   <th class="px-4 py-3 text-left font-medium">Quality</th>
+                 </tr>
+               </thead>
+               <tbody class="divide-y divide-white/5">
+                 <tr v-for="(pass, index) in filteredPasses" :key="index" class="hover:bg-white/5 transition-colors group">
+                   <td class="px-4 py-3 font-mono text-slate-300 group-hover:text-white">
+                     {{ formatDateTime(pass.aos_time) }}
+                   </td>
+                   <td class="px-4 py-3 text-slate-300">
+                     <div class="flex items-center gap-2">
+                        <div class="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
+                          <div class="h-full bg-blue-500" :style="`width: ${(pass.max_elevation / 90) * 100}%`"></div>
+                        </div>
+                        {{ pass.max_elevation.toFixed(0) }}°
+                     </div>
+                   </td>
+                   <td class="px-4 py-3 text-slate-300">{{ formatDuration(pass.duration) }}</td>
+                   <td class="px-4 py-3">
+                     <span class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider" :class="qualityBadgeClass(pass.quality_score)">
+                       {{ pass.quality_score.toFixed(0) }}
+                     </span>
+                   </td>
+                 </tr>
+               </tbody>
+             </table>
+           </div>
+           
+           <div v-else-if="passes" class="text-slate-500 text-center py-8 italic">
+             No passes found matching your filters.
+           </div>
         </div>
       </div>
     </div>
@@ -231,15 +243,75 @@ const loadingPasses = ref(false)
 const showQualityInfo = ref(false)
 
 // Filter controls
-const minQuality = ref(0)
-const minDuration = ref(0)
+const qualityFilter = ref('all')
+const durationFilter = ref(0)
+const timeFilters = ref({
+  morning: false,   // 5am - 12pm
+  afternoon: false, // 12pm - 5pm
+  evening: false,   // 5pm - 9pm
+  night: false      // 9pm - 5am
+})
+
+const getTimeOfDay = (dateStr) => {
+  const date = new Date(dateStr)
+  const hour = date.getHours()
+
+  if (hour >= 5 && hour < 12) return 'morning'
+  if (hour >= 12 && hour < 17) return 'afternoon'
+  if (hour >= 17 && hour < 21) return 'evening'
+  return 'night'
+}
+
+const resetFilters = () => {
+  qualityFilter.value = 'all'
+  durationFilter.value = 0
+  timeFilters.value = {
+    morning: false,
+    afternoon: false,
+    evening: false,
+    night: false
+  }
+}
+
+// Helper for dynamic classes
+const categoryBadgeClass = computed(() => {
+  if (!satellite.value) return ''
+  const map = {
+    weather: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    amateur_radio: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    popular: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+  }
+  return map[satellite.value.category] || 'bg-slate-500/10 text-slate-400'
+})
+
+const qualityBadgeClass = (score) => {
+  if (score >= 70) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(52,211,153,0.2)]'
+  if (score >= 40) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+  return 'bg-red-500/10 text-red-400 border-red-500/20'
+}
 
 const filteredPasses = computed(() => {
   if (!passes.value) return []
-  return passes.value.filter(pass =>
-    pass.quality_score >= minQuality.value &&
-    pass.duration >= minDuration.value
-  )
+
+  return passes.value.filter(pass => {
+    // Quality filter
+    if (qualityFilter.value === 'excellent' && pass.quality_score < 70) return false
+    if (qualityFilter.value === 'good' && pass.quality_score < 40) return false
+
+    // Duration filter
+    if (pass.duration < durationFilter.value) return false
+
+    // Time of day filter - if any are selected, only show those times
+    const anyTimeSelected = timeFilters.value.morning || timeFilters.value.afternoon ||
+                           timeFilters.value.evening || timeFilters.value.night
+
+    if (anyTimeSelected) {
+      const timeOfDay = getTimeOfDay(pass.aos_time)
+      if (!timeFilters.value[timeOfDay]) return false
+    }
+
+    return true
+  })
 })
 
 const isFavorited = computed(() => {
@@ -326,17 +398,6 @@ const formatDuration = (seconds) => {
   const minutes = Math.floor(seconds / 60)
   const secs = seconds % 60
   return `${minutes}m ${secs}s`
-}
-
-const qualityClass = (score) => {
-  if (score >= 70) return 'bg-green-100 text-green-800'
-  if (score >= 40) return 'bg-yellow-100 text-yellow-800'
-  return 'bg-orange-100 text-orange-800'
-}
-const qualityBadgeClass = (score) => {
-  if (score >= 70) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-  if (score >= 40) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-  return 'bg-red-500/10 text-red-400 border-red-500/20'
 }
 
 onMounted(async () => {

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
+import { useAuthStore } from './auth'
 
 export const useUserStore = defineStore('user', () => {
   const profile = ref(null)
@@ -9,7 +10,11 @@ export const useUserStore = defineStore('user', () => {
   const error = ref(null)
 
   const hasLocation = computed(() => {
-    return profile.value?.location_lat != null && profile.value?.location_lon != null
+    const authStore = useAuthStore()
+    // Must be authenticated AND have location data
+    return authStore.isAuthenticated &&
+           profile.value?.location_lat != null &&
+           profile.value?.location_lon != null
   })
 
   const fetchProfile = async () => {
@@ -86,6 +91,12 @@ export const useUserStore = defineStore('user', () => {
     return favorites.value.some(fav => fav.satellite_id === satelliteId)
   }
 
+  const clearUserData = () => {
+    profile.value = null
+    favorites.value = []
+    error.value = null
+  }
+
   return {
     profile,
     favorites,
@@ -97,6 +108,7 @@ export const useUserStore = defineStore('user', () => {
     fetchFavorites,
     addFavorite,
     removeFavorite,
-    isFavorite
+    isFavorite,
+    clearUserData
   }
 })

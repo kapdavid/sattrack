@@ -1,64 +1,59 @@
 <template>
-  <div>
-    <h1 class="text-3xl font-bold text-slate-900 mb-6">Browse Satellites</h1>
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-display font-bold text-white mb-8">Satellite Catalog</h1>
 
-    <!-- Search and Filter Bar -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-      <div class="flex flex-col md:flex-row gap-4">
-        <!-- Search -->
-        <div class="flex-1">
+    <div class="bg-space-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6 mb-8 shadow-lg">
+      <div class="flex flex-col md:flex-row gap-6">
+        <div class="flex-1 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-slate-500">🔍</span>
+          </div>
           <input
             v-model="searchQuery"
             @input="handleSearch"
             type="text"
-            placeholder="Search satellites..."
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search satellites (e.g., NOAA, ISS)..."
+            class="w-full pl-10 pr-4 py-3 bg-space-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
 
-        <!-- Category Filter -->
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <button
             @click="selectCategory(null)"
-            :class="[
-              'px-4 py-2 rounded-lg transition',
-              selectedCategory === null
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            ]"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border"
+            :class="selectedCategory === null 
+              ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]' 
+              : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10 hover:border-white/10'"
           >
             All
           </button>
+          
           <button
             @click="selectCategory('weather')"
-            :class="[
-              'px-4 py-2 rounded-lg transition',
-              selectedCategory === 'weather'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            ]"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border"
+            :class="selectedCategory === 'weather' 
+              ? 'bg-cyan-600/20 text-cyan-300 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]' 
+              : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'"
           >
             Weather
           </button>
+          
           <button
             @click="selectCategory('amateur_radio')"
-            :class="[
-              'px-4 py-2 rounded-lg transition',
-              selectedCategory === 'amateur_radio'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            ]"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border"
+            :class="selectedCategory === 'amateur_radio' 
+              ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+              : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'"
           >
             Amateur Radio
           </button>
+          
           <button
             @click="selectCategory('popular')"
-            :class="[
-              'px-4 py-2 rounded-lg transition',
-              selectedCategory === 'popular'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            ]"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border"
+            :class="selectedCategory === 'popular' 
+              ? 'bg-purple-600/20 text-purple-300 border-purple-500 shadow-[0_0_10px_rgba(147,51,234,0.3)]' 
+              : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'"
           >
             Popular
           </button>
@@ -66,29 +61,25 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="satellitesStore.loading" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      <p class="mt-4 text-slate-600">Loading satellites...</p>
+    <div v-if="satellitesStore.loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+      <p class="mt-4 text-slate-400 font-mono text-sm">Scanning frequencies...</p>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="satellitesStore.error" class="bg-red-50 text-red-600 p-4 rounded-lg">
+    <div v-else-if="satellitesStore.error" class="bg-red-500/10 border border-red-500/20 text-red-400 p-6 rounded-xl text-center">
       {{ satellitesStore.error }}
     </div>
 
-    <!-- No Results -->
-    <div v-else-if="satellitesStore.satellites.length === 0" class="text-center py-12">
-      <p class="text-slate-600 text-lg">No satellites found</p>
-    </div>
-
-    <!-- Satellite Grid -->
     <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       <SatelliteCard
         v-for="satellite in satellitesStore.satellites"
         :key="satellite.id"
         :satellite="satellite"
       />
+    </div>
+    
+    <div v-if="!satellitesStore.loading && satellitesStore.satellites.length === 0" class="text-center py-20">
+      <p class="text-slate-500 text-lg">No satellites found in orbit.</p>
     </div>
   </div>
 </template>

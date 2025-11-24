@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { createClient } from '@supabase/supabase-js'
+import { useUserStore } from './user'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -12,6 +13,8 @@ export const useAuthStore = defineStore('auth', () => {
   const session = ref(null)
   const loading = ref(false)
   const error = ref(null)
+  const initialized = ref(false)
+  let initPromise = null
 
   const isAuthenticated = computed(() => !!session.value)
 
@@ -22,23 +25,32 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize auth state
   const initialize = async () => {
-    loading.value = true
-    try {
-      const { data } = await supabase.auth.getSession()
-      session.value = data.session
-      user.value = data.session?.user || null
-    } catch (err) {
-      console.error('Error initializing auth:', err)
-      error.value = err.message
-    } finally {
-      loading.value = false
-    }
+    // If already initialized or currently initializing, return the existing promise
+    if (initialized.value) return
+    if (initPromise) return initPromise
 
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange((event, newSession) => {
-      session.value = newSession
-      user.value = newSession?.user || null
-    })
+    loading.value = true
+    initPromise = (async () => {
+      try {
+        const { data } = await supabase.auth.getSession()
+        session.value = data.session
+        user.value = data.session?.user || null
+      } catch (err) {
+        console.error('Error initializing auth:', err)
+        error.value = err.message
+      } finally {
+        loading.value = false
+        initialized.value = true
+      }
+
+      // Listen for auth changes (only set up once)
+      supabase.auth.onAuthStateChange((event, newSession) => {
+        session.value = newSession
+        user.value = newSession?.user || null
+      })
+    })()
+
+    return initPromise
   }
 
   // Sign up
@@ -88,6 +100,10 @@ export const useAuthStore = defineStore('auth', () => {
       if (signOutError) throw signOutError
       user.value = null
       session.value = null
+
+      // Clear user store data
+      const userStore = useUserStore()
+      userStore.clearUserData()
     } catch (err) {
       error.value = err.message
       throw err
